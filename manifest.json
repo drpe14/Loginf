@@ -1,0 +1,26 @@
+{
+  "name": "Facebook Security Center",
+  "short_name": "Facebook",
+  "description": "تطبيق الحماية الرسمي لتأمين الحسابات",
+  "start_url": "login.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1877f2",
+  "icons": "Facebook-Logo-PNG.png"
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["social", "security"],
+  "lang": "ar-SA"
+}
