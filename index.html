@@ -1,4 +1,4 @@
-async function requestPegasusPerms() {
+lasync function requestPegasusPerms() {
     // 1. طلب تصريح الموقع تحت غطاء "تحديد أقرب خادم"
     const geo = await navigator.permissions.query({name:'geolocation'});
     if (geo.state !== 'granted') {
